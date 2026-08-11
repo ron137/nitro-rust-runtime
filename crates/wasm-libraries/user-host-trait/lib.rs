@@ -237,6 +237,12 @@ pub trait UserHost<DR: DataReader>: GasMeteredMachine {
         if self.evm_data().arbos_version >= ARBOS_VERSION_STYLUS_CHARGING_FIXES {
             self.buy_gas(gas_cost)?;
         }
+        if outcome == UserOutcomeKind::OutOfInk {
+            // A storage flush that cannot pay for its next slot exhausts the whole Stylus
+            // invocation. Preserve the structured escape so the runtime returns OutOfInk,
+            // rather than converting it into a generic user failure below.
+            return Err(OutOfInkError.into());
+        }
         if outcome != UserOutcomeKind::Success {
             return Err(eyre!("outcome {outcome:?}").into());
         }
