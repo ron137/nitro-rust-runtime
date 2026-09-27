@@ -131,6 +131,11 @@ macro_rules! define_rust_probestack {
 // Any changes to this function should be replicated to the SGX version below.
 #[cfg(all(
     target_arch = "x86_64",
+    // On Linux, std's compiler_builtins already defines __rust_probestack (the same standard
+    // implementation). A second definition here is a duplicate symbol that fat LTO rejects
+    // ("symbol '__rust_probestack' is already defined"); the extern declaration above binds to
+    // std's copy instead.
+    not(target_os = "linux"),
     not(all(target_env = "sgx", target_vendor = "fortanix"))
 ))]
 core::arch::global_asm!(
